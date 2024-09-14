@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt') ;
 
 const signup = async (req , res) =>{
     try{
+        console.log(req)
         const {name , email , password, photo , bio , phone} = req.body ; 
         const user = await UserModel.findOne({email}) ; 
         if(user){
@@ -24,6 +25,7 @@ const signup = async (req , res) =>{
             })
     }
     catch(err){
+        console.log(err); 
         res.status(500)
             .json({
                 message : "Internal server error" , 
