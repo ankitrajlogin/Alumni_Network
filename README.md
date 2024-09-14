@@ -1,6 +1,7 @@
 
 # Directory Structure:
 
+```
 frontend/
 │
 ├── components/
@@ -17,3 +18,5 @@ frontend/
 ├── App.js
 ├── index.js
 └── main.js
+
+```
