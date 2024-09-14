@@ -1,31 +1,24 @@
-const Joi = require('joi');
 
-const signupValidation = (req, res, next) => {
-    const schema = Joi.object({
-        name: Joi.string().min(3).max(100).required(),
-        email: Joi.string().email().required(),
-        password: Joi.string().min(4).max(100).required()
-    });
-    const { error } = schema.validate(req.body);
-    if (error) {
-        return res.status(400)
-            .json({ message: "Bad request", error })
+const jwt = require('jsonwebtoken');
+
+const ensureAuthenticated = (req, res, next) => {
+    
+    try {
+        console.log("checking unortharized connection")
+        const auth = req.headers['authorization'];
+        if (!auth) {
+            return res.status(403)
+                .json({ message: 'Unauthorized, JWT token is require' });
+        }
+        const decoded = jwt.verify(auth, process.env.JWT_SECRET);
+        req.user = decoded;
+
+        
+        next();
+    } catch (err) {
+        return res.status(403)
+            .json({ message: 'Unauthorized, JWT token wrong or expired' });
     }
-    next();
 }
-const loginValidation = (req, res, next) => {
-    const schema = Joi.object({
-        email: Joi.string().email().required(),
-        password: Joi.string().min(4).max(100).required()
-    });
-    const { error } = schema.validate(req.body);
-    if (error) {
-        return res.status(400)
-            .json({ message: "Bad request", error })
-    }
-    next();
-}
-module.exports = {
-    signupValidation,
-    loginValidation
-}
+
+module.exports = ensureAuthenticated;

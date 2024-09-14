@@ -6,8 +6,6 @@ const postSchema = new mongoose.Schema(
         type: String,
         required: true 
     }, // Title of the post
-
-
     description: {
         type: String, 
         required: true }, // Description/content of the post
@@ -29,7 +27,7 @@ const postSchema = new mongoose.Schema(
 
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Users",
       required: true,
     }, // Reference to the user who created the post
   },

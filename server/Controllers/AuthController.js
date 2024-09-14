@@ -14,7 +14,7 @@ const signup = async (req , res) =>{
         }
 
         const userModel = new UserModel({name , email , password , photo , bio , phone}) ; 
-        console.log(userModel)
+
         userModel.password = await bcrypt.hash(password , 10) ; 
         await userModel.save() ;
         res.status(201)
@@ -34,20 +34,17 @@ const signup = async (req , res) =>{
 
 const login = async (req , res) =>{
     try{
-        // console.log(req.token) ; 
+        // (req.token) ; 
         const {email , password} = req.body ; 
         const user = await UserModel.findOne({email}) ; 
-        console.log(user)
         const errorMsg = "Auth failed email or password is wrong"
         if(!user){
             return res.status(409)
             .json({message : errorMsg , success : false}) ; 
         }
 
-        console.log(password) ; 
-        console.log(user.password) ; 
         const val = await bcrypt.hash(password , 10) ;
-        console.log(val)
+
         bcrypt.compare(password, user.password, (err, isMatch) => {
             if (err) {
                 console.error("Error comparing password:", err);
@@ -59,7 +56,7 @@ const login = async (req , res) =>{
         });
         const isPassEqual = await bcrypt.compare(password , user.password) ; 
 
-        console.log(isPassEqual )
+
         if(!isPassEqual){
             return res.status(409)
             .json({message : errorMsg , success : false}) ; 
@@ -83,7 +80,6 @@ const login = async (req , res) =>{
        
     }
     catch(err){
-        console.log(err)
         res.status(500)
             .json({
                 message : "Internal server error" , 
