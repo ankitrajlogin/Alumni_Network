@@ -1,38 +1,62 @@
+const User = require("../models/User");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 
-const UserModel = require('../Models/Users') ; 
-const jwt = require('jsonwebtoken') ;
+// Setup Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
-const bcrypt = require('bcrypt') ;
+exports.register = async (req, res) => {
+  const { username, email, password } = req.body;
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({
+      username,
+      email,
+      password: hashedPassword,
+    });
+    await user.save();
 
-const signup = async (req , res) =>{
-    try{
-        console.log(req)
-        const {name , email , password, photo , bio , phone} = req.body ; 
-        const user = await UserModel.findOne({email}) ; 
-        if(user){
-            return res.status(409)
-            .json({message : 'User is already exist , you can login' , success : false}) ; 
-        }
+    // Generate email verification token
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const url = `${process.env.CLIENT_URL}/verify/${token}`;
 
-        const userModel = new UserModel({name , email , password , photo , bio , phone}) ; 
+    // Send verification email
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Verify your email",
+      html: `<p>Please click the link to verify your email:</p><a href="${url}">${url}</a>`,
+    });
 
-        userModel.password = await bcrypt.hash(password , 10) ; 
-        await userModel.save() ;
-        res.status(201)
-            .json({
-                message : "Signup successfully" , 
-                success : true 
-            })
-    }
-    catch(err){
-        console.log(err); 
-        res.status(500)
-            .json({
-                message : "Internal server error" , 
-                success : false 
-            })
-    }
-}
+    res.status(200).json({ message: "Registration successful! Please check your email to verify." });
+  } catch (error) {
+    res.status(500).json({ error: "Registration failed!" });
+  }
+};
+
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user) return res.status(400).json({ error: "Invalid link" });
+
+    user.isVerified = true;
+    await user.save();
+    res.status(200).json({ message: "Email verified successfully!" });
+  } catch (error) {
+    res.status(500).json({ error: "Verification failed!" });
+  }
+};
+
 
 const login = async (req , res) =>{
     try{
